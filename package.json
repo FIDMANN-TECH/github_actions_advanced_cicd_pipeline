@@ -1,0 +1,17 @@
+{
+  "name": "gha-cicd-demo",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node app/server.js",
+    "test": "jest --runInBand",
+    "lint": "echo \"no linter configured\"",
+    "ci-prep": "npm ci"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "supertest": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
