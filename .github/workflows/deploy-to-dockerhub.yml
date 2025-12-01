@@ -5,15 +5,12 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-env:
-  IMAGE_NAME: gha-cicd-demo
-
 jobs:
   call-build:
-    name: Build+Push Image
+    name: Build + Push Image
     uses: ./.github/workflows/cd-dockerhub.yml
     with:
-      image_name: ${{ env.IMAGE_NAME }}
+      image_name: gha-cicd-demo
       tag: ${{ github.sha }}
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -29,5 +26,5 @@ jobs:
         run: |
           docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
           docker pull ${{ needs.call-build.outputs.image }}
-          docker tag ${{ needs.call-build.outputs.image }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ needs.call-build.outputs.image }} ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
