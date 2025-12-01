@@ -1,4 +1,4 @@
-name: Reusable: Build & Push Docker Image
+name: Reusable — Build & Push Docker Image
 
 on:
   workflow_call:
@@ -19,17 +19,11 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.set-image.outputs.image }}
+      image: ${{ steps.buildpush.outputs.image }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download artifact (if provided)
-        if: ${{ inputs.tag == 'from-artifact' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: gha-artifact
-          path: ./artifact || true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,16 +34,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and Push Image
         id: buildpush
         run: |
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
-          TAG="${{ inputs.tag && inputs.tag != '' && inputs.tag || 'latest' }}"
-          echo "Building ${IMAGE}:${TAG}"
+          TAG="${{ inputs.tag != '' && inputs.tag || 'latest' }}"
+
+          echo "Building image ${IMAGE}:${TAG}"
           docker build -t ${IMAGE}:${TAG} .
           docker push ${IMAGE}:${TAG}
-          echo "::set-output name=image::${IMAGE}:${TAG}"
 
-      - name: Set output image
-        id: set-image
-        run: echo "::set-output name=image::${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag || 'latest' }}"
+          echo "image=${IMAGE}:${TAG}" >> $GITHUB_OUTPUT

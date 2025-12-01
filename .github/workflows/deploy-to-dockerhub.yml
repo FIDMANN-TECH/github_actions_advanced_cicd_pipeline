@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
+
   call-build:
-    name: Build + Push Image
+    name: Build and Push Image
     uses: ./.github/workflows/cd-dockerhub.yml
     with:
       image_name: gha-cicd-demo
@@ -16,15 +17,23 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  conditional-release:
-    name: Promote tag to latest (conditional)
+  promote-latest:
+    name: Promote SHA image to latest
     needs: call-build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/heads/main')
+
     steps:
-      - name: Promote to latest by re-tagging
+      - name: Log in to Docker Hub
+        run: docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+
+      - name: Pull SHA image
+        run: docker pull ${{ needs.call-build.outputs.image }}
+
+      - name: Tag as latest
         run: |
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
-          docker pull ${{ needs.call-build.outputs.image }}
-          docker tag ${{ needs.call-build.outputs.image }} ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
+          docker tag ${{ needs.call-build.outputs.image }} \
+          ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
+
+      - name: Push latest tag
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
