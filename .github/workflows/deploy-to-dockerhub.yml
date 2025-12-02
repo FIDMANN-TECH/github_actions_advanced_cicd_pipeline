@@ -2,14 +2,14 @@ name: CD — Build & Push to Docker Hub
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
 
   call-build:
     name: Build and Push Image
-    uses: ./.github/workflows/cd-dockerhub.yml
+    uses: ./.github/workflows/reusable-build.yml
     with:
       image_name: gha-cicd-demo
       tag: ${{ github.sha }}
@@ -21,19 +21,22 @@ jobs:
     name: Promote SHA image to latest
     needs: call-build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/main')
 
     steps:
       - name: Log in to Docker Hub
-        run: docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+        run: |
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+          -p "${{ secrets.DOCKERHUB_TOKEN }}"
 
       - name: Pull SHA image
-        run: docker pull ${{ needs.call-build.outputs.image }}
+        run: |
+          docker pull "${{ needs.call-build.outputs.image }}"
 
       - name: Tag as latest
         run: |
-          docker tag ${{ needs.call-build.outputs.image }} \
-          ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
+          docker tag "${{ needs.call-build.outputs.image }}" \
+          "${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest"
 
       - name: Push latest tag
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest
+        run: |
+          docker push "${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:_
