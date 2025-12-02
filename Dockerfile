@@ -1,24 +1,29 @@
+# ---------------- Builder Stage ----------------
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy dependency files first
+# Copy dependency files only
 COPY package.json package-lock.json ./
-RUN npm ci --production=false
 
-# Copy application code
+# Install ALL dependencies (including dev)
+RUN npm ci
+
+# Copy all application source code
 COPY . .
-RUN npm test
 
-# -------- Release stage --------
+# ---------------- Production Stage ----------------
 FROM node:18-alpine
 WORKDIR /app
 
-# Copy dependency files
+# Copy only the dependency files
 COPY package.json package-lock.json ./
-RUN npm ci --production
 
-# Copy only production app files
-COPY app ./app
+# Install ONLY production dependencies
+RUN npm ci --only=production
+
+# Copy application code from builder
+COPY --from=builder /app/app ./app
 
 EXPOSE 8080
+
 CMD ["node", "app/server.js"]
