@@ -38,9 +38,9 @@ jobs:
         id: buildpush
         run: |
           IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}"
-          TAG="${{ inputs.tag != '' && inputs.tag || 'latest' }}"
+          TAG="${{ inputs.tag != '' && inputs.tag || github.sha }}"
 
-          echo "Building image ${IMAGE}:${TAG}"
+          echo "Building ${IMAGE}:${TAG}"
           docker build -t ${IMAGE}:${TAG} .
           docker push ${IMAGE}:${TAG}
 
