@@ -2,7 +2,7 @@ name: CD — Build & Push to Docker Hub
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -24,19 +24,14 @@ jobs:
 
     steps:
       - name: Log in to Docker Hub
-        run: |
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" \
-          -p "${{ secrets.DOCKERHUB_TOKEN }}"
+        run: docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
 
       - name: Pull SHA image
-        run: |
-          docker pull "${{ needs.call-build.outputs.image }}"
+        run: docker pull "${{ needs.call-build.outputs.image }}"
 
       - name: Tag as latest
-        run: |
-          docker tag "${{ needs.call-build.outputs.image }}" \
+        run: docker tag "${{ needs.call-build.outputs.image }}" \
           "${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest"
 
       - name: Push latest tag
-        run: |
-          docker push "${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:_
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/gha-cicd-demo:latest"
