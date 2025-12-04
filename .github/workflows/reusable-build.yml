@@ -1,4 +1,4 @@
-name: Reusable Build and Push
+name: Reusable — Build & Push Docker Image
 
 on:
   workflow_call:
@@ -12,28 +12,34 @@ on:
     secrets:
       DOCKERHUB_TOKEN:
         required: true
+    # Variables passed from caller workflow
+    # (these do NOT go in workflow_call > secrets)
+    # GitHub Actions automatically allows vars.* here
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     outputs:
-      image: ${{ steps.out.outputs.image }}
+      image: ${{ steps.buildpush.outputs.image }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: docker/login-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push
+      - name: Build & Push Image
+        id: buildpush
         run: |
           IMAGE="${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}"
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
-      - name: Output Image
-        id: out
-        run: echo "image=${{ vars.DOCKERHUB_USERNAME }}/${{ inputs.image_name }}:${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
